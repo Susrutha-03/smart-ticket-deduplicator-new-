@@ -1,6 +1,6 @@
 from deduplicator import detect_duplicate
 
-HIGH_THRESHOLD = 0.85
+HIGH_THRESHOLD = 0.80
 LOW_THRESHOLD = 0.65
 
 
@@ -31,34 +31,30 @@ def agent_loop(ticket, database):
         }
 
     # Step 3: Medium confidence → second reasoning
-    elif result["score"] >= LOW_THRESHOLD:
+    # Step 3: Medium confidence → semantic reasoning
+elif result["score"] >= LOW_THRESHOLD:
+
+    reasoning.append(
+        "Step 2: Medium confidence semantic match"
+    )
+
+    if result["score"] >= 0.75:
 
         reasoning.append(
-            "Step 2: Medium confidence, checking keywords"
+            "Step 3: Similar meaning detected"
         )
-
-        words1 = set(ticket.lower().split())
-        words2 = set(result["match"]["ticket"].lower().split())
-
-        overlap = len(words1.intersection(words2))
 
         reasoning.append(
-            f"Step 3: Keyword overlap = {overlap}"
+            "Step 4: Duplicate confirmed"
         )
 
-        if overlap >= 2:
-
-            reasoning.append(
-                "Step 4: Duplicate confirmed"
-            )
-
-            return {
-                "decision": "duplicate",
-                "match": result["match"],
-                "score": result["score"],
-                "embedding": result["embedding"],
-                "reasoning": reasoning
-            }
+        return {
+            "decision": "duplicate",
+            "match": result["match"],
+            "score": result["score"],
+            "embedding": result["embedding"],
+            "reasoning": reasoning
+        }
 
     reasoning.append(
         "Step 4: New ticket created"
